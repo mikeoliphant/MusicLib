@@ -42,9 +42,11 @@ namespace AndroidPlayer
 
                 float dbGain = (float)tagFile.Tag.ReplayGainTrackGain;
 
+                float dbOffset = -11;
+
                 if (!double.IsNaN(dbGain))
                 {
-                    float linearGain = (float)Math.Pow(10, dbGain / 20) * 0.32f;
+                    float linearGain = (float)Math.Pow(10, ((dbGain + dbOffset) / 20));
 
                     player.SetVolume(linearGain, linearGain);
                 }

@@ -1,10 +1,14 @@
-﻿using MusicLib;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
+using MusicLib;
+using SharpCifs.Util.Transport;
 using TagLib.Ape;
 
 namespace MusicLib
@@ -16,6 +20,7 @@ namespace MusicLib
         public SongData CurrentSong { get; private set; }
 
         public event EventHandler SongChanged;
+        HttpListener httpListener;
 
         int currentSongIndex = 0;
 
@@ -28,11 +33,24 @@ namespace MusicLib
                 SongIndex = SongIndex.ReadFromJson(indexStream);
             }
 
-            SongIndex.Songs = SongIndex.Songs.Where(s => !((s.Genre.StartsWith("Chorus") || (s.Genre.StartsWith("Classical"))))).ToList();
+            SongIndex.Songs = SongIndex.Songs.Where(s => !StartsWith(s.Genre, "Chorus", "Classical", "Blues", "Jazz", "Celtic", "World")).ToList();
 
             Random.Shared.Shuffle(CollectionsMarshal.AsSpan(SongIndex.Songs));
 
             CurrentSong = SongIndex.Songs[currentSongIndex];
+
+            Task.Run(RunHttpServer);
+        }
+
+        static bool StartsWith(string str, params string[] words)
+        {
+            foreach (string word in words)
+            {
+                if (str.StartsWith(word, StringComparison.InvariantCultureIgnoreCase))
+                    return true;
+            }
+
+            return false;
         }
 
         public void NextSong()
@@ -62,6 +80,43 @@ namespace MusicLib
         public virtual void Play()
         {
 
+        }
+
+        async Task RunHttpServer()
+        {
+            httpListener = new HttpListener();
+            httpListener.Prefixes.Add("http://localhost:8080/");
+
+            httpListener.Start();
+
+            while (true)
+            {
+                HttpListenerContext context = httpListener.GetContext();
+                HttpListenerRequest request = context.Request;
+
+                if (request.HttpMethod == "GET")
+                {
+                    using HttpListenerResponse response = context.Response;
+                    string responseString = JsonSerializer.Serialize<SongData>(CurrentSong);
+
+                    byte[] buffer = Encoding.UTF8.GetBytes(responseString);
+
+                    response.ContentLength64 = buffer.Length;
+                    response.ContentType = "application/json";
+
+                    using Stream output = response.OutputStream;
+                    output.Write(buffer, 0, buffer.Length);
+                }
+                else if (request.HttpMethod == "POST")
+                {
+                    NextSong();
+
+                    using HttpListenerResponse response = context.Response;
+
+                    response.StatusCode = (int)HttpStatusCode.OK;
+                    response.OutputStream.Close();
+                }
+            }
         }
     }
 }
