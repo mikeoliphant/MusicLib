@@ -18,8 +18,6 @@ namespace MusicLib
         public event EventHandler SongChanged;
 
         int currentSongIndex = 0;
-        HttpClient httpClient = new HttpClient();
-        Random random = new();
 
         public SongPlayContext(FileProvider songFileProvider)
         {
@@ -64,18 +62,6 @@ namespace MusicLib
         public virtual void Play()
         {
 
-        }
-
-        public async Task<Stream> GetSplashPhotoStream(int width, int height)
-        {
-            var client = new UnsplashClient(Secrets.UnsplashAccessKey);
-
-            var photosFound = await client.SearchPhotos(CurrentSong.Title);
-
-            if (photosFound.Results.Length == 0)
-                return null;
-
-            return await httpClient.GetStreamAsync(photosFound.Results[random.Next(photosFound.Results.Length)].Urls.Raw + $"&w={width}&h={height}&fit=crop");
         }
     }
 }

@@ -1,7 +1,8 @@
 ﻿using System.IO;
+using System.Net.Http;
+using MusicLib;
 using SkiaSharp;
 using UILayout;
-using MusicLib;
 
 namespace MusicUI
 {
@@ -12,6 +13,11 @@ namespace MusicUI
         TextBlock songTitleText;
         TextBlock songArtistText;
         UIElementWrapper splashWrapper;
+        SongData lastSongData = null;
+        UnsplashSearchResponse currentPhotos;
+        int currentPhotoIndex = 0;
+        HttpClient httpClient = new HttpClient();
+        Random random = new();
 
         public MainInterface(SongPlayContext playContext)
         {
@@ -52,38 +58,75 @@ namespace MusicUI
         {
             while (true)
             {
-                using (Stream photoStream = await PlayContext.GetSplashPhotoStream((int)Layout.Current.Bounds.Width, (int)Layout.Current.Bounds.Height))
+                for (int i = 0; i < 30; i++)
                 {
-                    if (photoStream != null)
+                    if (PlayContext.CurrentSong != lastSongData)
                     {
-                        try
+                        lastSongData = PlayContext.CurrentSong;
+
+                        currentPhotos = await GetSplashPhotos();
+
+                        if (currentPhotos != null)
                         {
-                            var skData = SKData.Create(photoStream);
-
-                            var bitmap = SKBitmap.Decode(skData);
-
-                            var oldChild = splashWrapper.Child as ImageElement;
-
-                            UIImage splashImage = new UIImage(bitmap);
-
-                            splashWrapper.Child = new ImageElement(splashImage);
-
-                            if (oldChild != null)
-                                oldChild.Image.Bitmap.Dispose();
-                        }
-                        catch (Exception ex)
-                        {
-
+                            Random.Shared.Shuffle(currentPhotos.Results);
                         }
 
-                        Layout.Current.AddDirtyRect(Layout.Current.Bounds);
+                        currentPhotoIndex = 0;
 
-                        UpdateDisplay();
+                        break;
                     }
+
+                    await Task.Delay(1000);
                 }
 
-                await Task.Delay(30000);
+                if ((currentPhotos != null) && (currentPhotos.Results.Length > 0))
+                {
+                    try
+                    {
+                        using (Stream photoStream = await GetSplashPhotoStream(currentPhotos.Results[currentPhotoIndex], (int)Layout.Current.Bounds.Width, (int)Layout.Current.Bounds.Height))
+                        {
+                            if (photoStream != null)
+                            {
+                                var skData = SKData.Create(photoStream);
+
+                                var bitmap = SKBitmap.Decode(skData);
+
+                                var oldChild = splashWrapper.Child as ImageElement;
+
+                                UIImage splashImage = new UIImage(bitmap);
+
+                                splashWrapper.Child = new ImageElement(splashImage);
+
+                                if (oldChild != null)
+                                    Layout.Current.AddDirtyRect(Layout.Current.Bounds);
+
+                                UpdateDisplay();
+                            }
+                        }
+
+                        currentPhotoIndex++;
+
+                        if (currentPhotoIndex == currentPhotos.Results.Length)
+                            currentPhotoIndex = 0;
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
+                }
             }
+        }
+
+        public async Task<UnsplashSearchResponse> GetSplashPhotos()
+        {
+            var client = new UnsplashClient(Secrets.UnsplashAccessKey);
+
+            return await client.SearchPhotos(PlayContext.CurrentSong.Title);
+        }
+
+        public async Task<Stream> GetSplashPhotoStream(Photo photo, int width, int height)
+        {
+            return await httpClient.GetStreamAsync(photo.Urls.Raw + $"&w={width}&h={height}&fit=crop");
         }
 
         private void PlayContext_SongChanged(object? sender, EventArgs e)
