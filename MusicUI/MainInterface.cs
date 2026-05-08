@@ -97,8 +97,10 @@ namespace MusicUI
 
                                 splashWrapper.Child = new ImageElement(splashImage);
 
+                                Layout.Current.AddDirtyRect(Layout.Current.Bounds);
+
                                 if (oldChild != null)
-                                    Layout.Current.AddDirtyRect(Layout.Current.Bounds);
+                                    oldChild.Image.Bitmap.Dispose();
 
                                 UpdateDisplay();
                             }
