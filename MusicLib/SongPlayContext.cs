@@ -15,6 +15,8 @@ namespace MusicLib
 {
     public class SongPlayContext
     {
+        public static string HttpListenUrl = "http://*:8080/";
+
         public SongIndex SongIndex { get; private set; }
         public FileProvider SongFileProvider { get; private set; }
         public SongData CurrentSong { get; private set; }
@@ -85,36 +87,43 @@ namespace MusicLib
         async Task RunHttpServer()
         {
             httpListener = new HttpListener();
-            httpListener.Prefixes.Add("http://localhost:8080/");
+            httpListener.Prefixes.Add(HttpListenUrl);
 
             httpListener.Start();
 
             while (true)
             {
-                HttpListenerContext context = httpListener.GetContext();
-                HttpListenerRequest request = context.Request;
-
-                if (request.HttpMethod == "GET")
+                try
                 {
-                    using HttpListenerResponse response = context.Response;
-                    string responseString = JsonSerializer.Serialize<SongData>(CurrentSong);
+                    HttpListenerContext context = httpListener.GetContext();
+                    HttpListenerRequest request = context.Request;
 
-                    byte[] buffer = Encoding.UTF8.GetBytes(responseString);
+                    if (request.HttpMethod == "GET")
+                    {
+                        using HttpListenerResponse response = context.Response;
+                        string responseString = JsonSerializer.Serialize<SongData>(CurrentSong);
 
-                    response.ContentLength64 = buffer.Length;
-                    response.ContentType = "application/json";
+                        byte[] buffer = Encoding.UTF8.GetBytes(responseString);
 
-                    using Stream output = response.OutputStream;
-                    output.Write(buffer, 0, buffer.Length);
+                        response.ContentLength64 = buffer.Length;
+                        response.ContentType = "application/json";
+
+                        using Stream output = response.OutputStream;
+                        output.Write(buffer, 0, buffer.Length);
+                    }
+                    else if (request.HttpMethod == "POST")
+                    {
+                        NextSong();
+
+                        using HttpListenerResponse response = context.Response;
+
+                        response.StatusCode = (int)HttpStatusCode.OK;
+                        response.OutputStream.Close();
+                    }
                 }
-                else if (request.HttpMethod == "POST")
+                catch (Exception ex)
                 {
-                    NextSong();
 
-                    using HttpListenerResponse response = context.Response;
-
-                    response.StatusCode = (int)HttpStatusCode.OK;
-                    response.OutputStream.Close();
                 }
             }
         }

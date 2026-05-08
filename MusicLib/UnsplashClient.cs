@@ -41,7 +41,7 @@ namespace MusicLib
 
         public async Task<UnsplashSearchResponse> SearchPhotos(string searchString)
         {
-            string url = $"https://api.unsplash.com/search/photos?query={searchString}&client_id={accessKey}&orientation=landscape&per_page=30";
+            string url = $"https://api.unsplash.com/search/photos?query={searchString}&client_id={accessKey}&orientation=landscape&order_by=popular&per_page=30";
 
             try
             {

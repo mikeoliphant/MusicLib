@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using MusicLib;
 using TagLib;
+using static System.Net.WebRequestMethods;
 
 namespace WpfApp
 {
@@ -27,6 +28,11 @@ namespace WpfApp
 
     public class WindowsSongPlayContext : SongPlayContext
     {
+        static WindowsSongPlayContext()
+        {
+            HttpListenUrl = "http://localhost:8080/";
+        }
+
         public WindowsSongPlayContext(FileProvider fileProvider)
             : base(fileProvider)
         {
