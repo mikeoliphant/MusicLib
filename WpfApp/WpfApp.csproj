@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Dependencies\UILayout\UILayout.Skia.WPF\UILayout.Skia.WPF.csproj" />
     <ProjectReference Include="..\MusicLib\MusicLib.csproj" />
   </ItemGroup>
 

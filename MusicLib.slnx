@@ -2,6 +2,10 @@
   <Project Path="AndroidPlayer/AndroidPlayer.csproj" Id="c3f37faf-37bb-4783-ab56-af0278fe69e7">
     <Deploy />
   </Project>
+  <Project Path="Dependencies/UILayout/UILayout.DefaultTextures/UILayout.DefaultTextures.shproj" Id="9f1a46c4-bc4c-46f7-b10a-1719d53a5fd3" />
+  <Project Path="Dependencies/UILayout/UILayout.Skia.WPF/UILayout.Skia.WPF.csproj" />
+  <Project Path="Dependencies/UILayout/UILayout.Skia/UILayout.Skia.shproj" Id="43920506-574a-4227-9759-5c55c3d54a9a" />
+  <Project Path="Dependencies/UILayout/UILayout/UILayout.shproj" Id="7da2b397-a39f-4e5b-96ed-f206329982c9" />
   <Project Path="MusicLib/MusicLib.csproj" />
   <Project Path="MusicUI/MusicUI.shproj" Id="e2523b72-5978-42fc-8aaa-64d82c2ae6fe" />
   <Project Path="WpfApp/WpfApp.csproj" Id="1bf29cda-6ca4-4f54-a120-2dd7a4ceb671" />

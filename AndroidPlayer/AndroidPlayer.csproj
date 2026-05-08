@@ -38,4 +38,7 @@
 		<ProjectReference Include="..\MusicLib\MusicLib.csproj" />
 	</ItemGroup>
 	<Import Project="..\MusicUI\MusicUI.projitems" Label="Shared" />
+	<Import Project="..\Dependencies\UILayout\UILayout\UILayout.projitems" Label="Shared" />
+	<Import Project="..\Dependencies\UILayout\UILayout.DefaultTextures\UILayout.DefaultTextures.projitems" Label="Shared" />
+	<Import Project="..\Dependencies\UILayout\UILayout.Skia\UILayout.Skia.projitems" Label="Shared" />
 </Project>
