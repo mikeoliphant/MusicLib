@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="AndroidPlayer/AndroidPlayer.csproj" Id="c3f37faf-37bb-4783-ab56-af0278fe69e7">
+    <Deploy />
+  </Project>
+  <Project Path="MusicLib/MusicLib.csproj" />
+  <Project Path="MusicUI/MusicUI.shproj" Id="e2523b72-5978-42fc-8aaa-64d82c2ae6fe" />
+  <Project Path="WpfApp/WpfApp.csproj" Id="1bf29cda-6ca4-4f54-a120-2dd7a4ceb671" />
+</Solution>
