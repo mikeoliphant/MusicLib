@@ -7,7 +7,14 @@ using UILayout;
 
 namespace AndroidPlayer
 {
-    [Activity(Label = "@string/app_name", MainLauncher = true)]
+    [Activity(Label = "@string/app_name",
+        Icon = "@mipmap/ic_launcher",
+        Banner = "@drawable/banner",
+        MainLauncher = true
+        )]
+    [IntentFilter(
+        actions: new string[] { "android.intent.action.MAIN" },
+        Categories = new string[] { "android.intent.category.LEANBACK_LAUNCHER" })]
     public class MainActivity : Activity
     {
         LayoutView layoutView;
