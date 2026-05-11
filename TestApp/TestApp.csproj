@@ -1,15 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Library</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SharpCifs.Std" Version="0.2.13" />
-    <PackageReference Include="TagLibSharp" Version="2.3.0" />
+    <ProjectReference Include="..\MusicLib\MusicLib.csproj" />
   </ItemGroup>
 
 </Project>

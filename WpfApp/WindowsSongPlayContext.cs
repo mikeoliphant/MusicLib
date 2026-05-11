@@ -47,7 +47,7 @@ namespace WpfApp
             {
                 var tagFile = TagLib.File.Create(new StreamFileAbstraction(CurrentSong.FileName, songStream));
 
-                double gain = tagFile.Tag.ReplayGainAlbumGain;
+                double gain = tagFile.Tag.ReplayGainTrackGain;
             }
         }
     }

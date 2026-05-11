@@ -111,11 +111,12 @@ namespace MusicLib
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Simple POST Form</title>
+    <title>Currently Playing</title>
 </head>
 <body>
     <h1>{CurrentSong.Title}</h1>
     <h1>{CurrentSong.Artist}</h1>
+    <h1>{CurrentSong.Album} ({CurrentSong.Year}) - {CurrentSong.Genre}</h1>
     <form action="/submit-form-endpoint" method="post">
         <button type="submit">Next Song</button>
     </form>

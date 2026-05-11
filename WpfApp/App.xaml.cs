@@ -21,7 +21,7 @@ namespace WpfApp
                 Height = 800
             };
 
-            SMBFileProvider provider = new SMBFileProvider(@"smb://USBDISK/Share/Music", "WORKGROUP", Secrets.SMBUser, Secrets.SMBPassword);
+            SMBFileProvider provider = new SMBFileProvider(@"smb://USBDISK/Share/MusicNew", "WORKGROUP", Secrets.SMBUser, Secrets.SMBPassword);
 
             WindowsSongPlayContext playContext = new(provider);
 

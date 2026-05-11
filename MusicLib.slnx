@@ -8,5 +8,6 @@
   <Project Path="Dependencies/UILayout/UILayout/UILayout.shproj" Id="7da2b397-a39f-4e5b-96ed-f206329982c9" />
   <Project Path="MusicLib/MusicLib.csproj" />
   <Project Path="MusicUI/MusicUI.shproj" Id="e2523b72-5978-42fc-8aaa-64d82c2ae6fe" />
+  <Project Path="TestApp/TestApp.csproj" Id="da69e042-f79c-4b37-a33c-a2038cd98dd8" />
   <Project Path="WpfApp/WpfApp.csproj" Id="1bf29cda-6ca4-4f54-a120-2dd7a4ceb671" />
 </Solution>
