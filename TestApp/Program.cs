@@ -7,9 +7,10 @@ namespace TestApp
     {
         static async Task Main(string[] args)
         {
+            //CreateIndex(@"\\USBDISK\Share\MusicNew");
 
-            //SongIndex songIndex = SongIndex.ReadFromJson(@"\\USBDISK\Share\MusicNew\index.json");
-            SongIndex songIndex = SongIndex.ReadFromJson(@"C:\Share\MusicNew\index.json");
+            SongIndex songIndex = SongIndex.ReadFromJson(@"\\USBDISK\Share\MusicNew\index.json");
+            //SongIndex songIndex = SongIndex.ReadFromJson(@"C:\Share\MusicNew\index.json");
 
             //var albums = songIndex.GetAllAlbums();
 
@@ -18,7 +19,31 @@ namespace TestApp
             //    string blah = await client.GetReleaseGroup(album[0]);
             //}
 
+            ImportAlbums(songIndex, @"C:\Users\oliph\Downloads\Tom Petty & The Heartbreakers - Hypnotic Eye");
+           
             songIndex.WriteToJson();
+        }
+
+        static void ImportAlbums(SongIndex songIndex, string fromPath)
+        {
+            SongIndex fromIndex = SongIndex.CreateFromPath(fromPath);
+
+            fromIndex.AddVariousArtists();
+
+            fromIndex.CopySongsToPath(songIndex.RootPath);
+            fromIndex.CopyAdditionalAlbumFilesToPath(songIndex.RootPath);
+
+            foreach (var song in fromIndex.Songs)
+            {
+                song.FileName = SongIndex.GetSongPath(song);
+
+                if (!songIndex.Songs.Where(s => s.FileName == song.FileName).Any())
+                {
+                    song.DateAdded = DateOnly.FromDateTime(DateTime.Now);
+
+                    songIndex.Songs.Add(song);
+                }
+            }
         }
 
         static async Task FixMissingYears(SongIndex songIndex)

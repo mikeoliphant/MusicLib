@@ -32,8 +32,6 @@ namespace WpfApp
             layoutWindow.SkiaCanvas.SetLayout(ui);
 
             layoutWindow.Show();
-
-            playContext.PlayCurrentSong();
         }
     }
 }

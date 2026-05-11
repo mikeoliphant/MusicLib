@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Data;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -131,6 +132,11 @@ namespace MusicLib
             return Path.Combine(GetArtistPath(song), GetSafeFilename(song.Album));
         }
 
+        public static string GetSongPath(SongData song)
+        {
+            return Path.Combine(GetAlbumPath(song), GetSafeFilename(song.Title)) + ".mp3";
+        }
+
         public static string GetSafeFilename(string path)
         {
             var normalizedString = path.Normalize(NormalizationForm.FormD);
@@ -222,33 +228,41 @@ namespace MusicLib
         {
             foreach (SongData song in Songs)
             {
-                string artistDir = Path.Combine(path, GetSafeFilename(song.AlbumArtist));
+                string artistDir = Path.Combine(path, GetArtistPath(song));
 
                 if (!Directory.Exists(artistDir))
                 {
                     Directory.CreateDirectory(artistDir);
                 }
 
-                string albumDir = Path.Combine(artistDir, GetSafeFilename(song.Album));
+                string albumDir = Path.Combine(path, GetAlbumPath(song));
 
                 if (!Directory.Exists(albumDir))
                 {
                     Directory.CreateDirectory(albumDir);
                 }
 
-                string songFile = Path.Combine(albumDir, GetSafeFilename(song.Title)) + ".mp3";
+                string songFile = Path.Combine(path, GetSongPath(song));
 
-                System.IO.File.Copy(Path.Combine(RootPath, song.FileName), songFile, overwrite: true);
+                File.Copy(Path.Combine(RootPath, song.FileName), songFile, overwrite: true);
+            }
+        }
 
-                string coverPath = Path.Combine(albumDir, "cover.bmp");
+        public void CopyAdditionalAlbumFilesToPath(string path)
+        {
+            var albums = GetAllAlbums();
 
-                if (!File.Exists(coverPath))
+            foreach (var album in albums)
+            {
+                string srcFolder = Path.Combine(RootPath, Path.GetDirectoryName(album[0].FileName));
+                string destFolder = Path.Combine(path, GetAlbumPath(album[0]));
+
+                foreach (string file in Directory.GetFiles(Path.Combine(RootPath, srcFolder)))
                 {
-                    try
+                    if (Path.GetExtension(file).ToLower() != ".mp3")
                     {
-                        File.Copy(Path.Combine(RootPath, Path.GetDirectoryName(song.FileName), "cover.bmp"), coverPath);
+                        File.Copy(file, Path.Combine(destFolder, Path.GetFileName(file)), overwrite: true);
                     }
-                    catch { }
                 }
             }
         }
@@ -278,6 +292,7 @@ namespace MusicLib
         public string Genre { get; set; } = "";
         public uint TrackNumber { get; set; }
         public uint PlayTime { get; set; }
+        public DateOnly DateAdded { get; set; } = DateOnly.MinValue;
         public string FileName { get; set; } = "";
     }
 }

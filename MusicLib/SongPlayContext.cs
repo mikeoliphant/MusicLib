@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
@@ -36,11 +37,7 @@ namespace MusicLib
                 SongIndex = SongIndex.ReadFromJson(indexStream);
             }
 
-            SongIndex.Songs = SongIndex.Songs.Where(s => !StartsWith(s.Genre, "Chorus", "Classical", "Blues", "Jazz", "Celtic", "World")).ToList();
-
-            Random.Shared.Shuffle(CollectionsMarshal.AsSpan(SongIndex.Songs));
-
-            CurrentSong = SongIndex.Songs[currentSongIndex];
+            SetPlaylist("rockish");
 
             Task.Run(RunHttpServer);
         }
@@ -85,6 +82,33 @@ namespace MusicLib
 
         }
 
+        void SetPlaylist(string playlistName)
+        {
+            var songs = SongIndex.Songs.Where(s => !StartsWith(s.Genre, "Chorus", "Classical", "Blues", "Jazz", "Celtic", "World")).ToList();
+
+            Random.Shared.Shuffle(CollectionsMarshal.AsSpan(songs));
+
+            if (playlistName == "rockish_new")
+            {
+                var newSongs = songs.Where(s => (s.DateAdded > DateOnly.FromDateTime(DateTime.Now - TimeSpan.FromDays(30)))).ToList();
+
+                int insertIndex = 0;
+
+                foreach (var song in newSongs)
+                {
+                    insertIndex += 5 + Random.Shared.Next(5);
+
+                    songs.Insert(insertIndex, song);
+                }
+            }
+
+            SongIndex.Songs = songs;
+
+            CurrentSong = SongIndex.Songs[currentSongIndex];
+
+            PlayCurrentSong();
+        }
+
         async Task RunHttpServer()
         {
             httpListener = new HttpListener();
@@ -101,7 +125,19 @@ namespace MusicLib
 
                     if (request.HttpMethod == "POST")
                     {
-                        NextSong();
+                        switch (request.Url.AbsolutePath)
+                        {
+                            case "/next_song":
+                                NextSong();
+                                break;
+                            case "/playlist":
+                                string playlistType = request.QueryString.Get("type");
+
+                                SetPlaylist(playlistType);
+
+                                break;
+                        }
+
                     }
 
                     using HttpListenerResponse response = context.Response;
@@ -117,10 +153,12 @@ namespace MusicLib
     <h1>{CurrentSong.Title}</h1>
     <h1>{CurrentSong.Artist}</h1>
     <h1>{CurrentSong.Album} ({CurrentSong.Year}) - {CurrentSong.Genre}</h1>
-    <form action="/submit-form-endpoint" method="post">
-        <button type="submit">Next Song</button>
+    <form method="post">
+        <button formaction="/next_song" type="submit">Next Song</button>
+        <button formaction="/playlist?type=rockish" type="submit">Rockish</button>
+        <button formaction="/playlist?type=rockish_new" type="submit">Rockish New</button>
     </form>
-</body>
+  </body>
 </html>
 """;
                     byte[] buffer = Encoding.UTF8.GetBytes(responseString);
