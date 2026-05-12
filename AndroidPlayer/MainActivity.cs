@@ -45,7 +45,7 @@ namespace AndroidPlayer
 
             layoutView = new(this);
 
-            SMBFileProvider provider = new SMBFileProvider(@"smb://USBDISK/Share/Music", "WORKGROUP", Secrets.SMBUser, Secrets.SMBPassword);
+            SMBFileProvider provider = new SMBFileProvider(@"smb://USBDISK/Share/MusicNew", "WORKGROUP", Secrets.SMBUser, Secrets.SMBPassword);
 
             playContext = new AndroidSongPlayContext(provider);
 
@@ -53,8 +53,6 @@ namespace AndroidPlayer
             SetContentView(layoutView.CanvasView);
 
             layoutView.RootUIElement = new MainInterface(playContext);
-
-            playContext.PlayCurrentSong();
         }
     }
 }

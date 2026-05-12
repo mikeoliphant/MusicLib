@@ -12,6 +12,7 @@ namespace MusicUI
 
         TextBlock songTitleText;
         TextBlock songArtistText;
+        TextBlock timeText;
         UIElementWrapper splashWrapper;
         SongData lastSongData = null;
         UnsplashSearchResponse currentPhotos;
@@ -21,9 +22,9 @@ namespace MusicUI
 
         public MainInterface(SongPlayContext playContext)
         {
-            Layout.Current.DefaultFont = new UIFont { Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright), TextSize = 48 };
-
             PlayContext = playContext;
+
+            Layout.Current.DefaultFont = new UIFont { Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright), TextSize = 48 };
 
             PlayContext.SongChanged += PlayContext_SongChanged;
 
@@ -32,22 +33,31 @@ namespace MusicUI
             splashWrapper = new UIElementWrapper { HorizontalAlignment = EHorizontalAlignment.Stretch, VerticalAlignment = EVerticalAlignment.Stretch };
             Children.Add(splashWrapper);
 
-            VerticalStack textStack = new VerticalStack
+            Dock uiDock = new Dock { Margin = 20 };
+            Children.Add(uiDock);
+
+            VerticalStack songInfoStack = new VerticalStack
             {
                 HorizontalAlignment = EHorizontalAlignment.Left,
                 VerticalAlignment = EVerticalAlignment.Bottom,
-                Margin = 10,
                 ChildSpacing = 10
             };
 
-            Children.Add(textStack);
+            uiDock.Children.Add(songInfoStack);
 
             songTitleText = new TextBlock();
             songArtistText = new TextBlock();
 
-            textStack.Children.Add(songTitleText);
-            textStack.Children.Add(songArtistText);
-            PlayContext = playContext;
+            songInfoStack.Children.Add(songTitleText);
+            songInfoStack.Children.Add(songArtistText);
+
+            timeText = new TextBlock
+            {
+                HorizontalAlignment = EHorizontalAlignment.Right,
+                VerticalAlignment = EVerticalAlignment.Top
+            };
+
+            uiDock.Children.Add(timeText);
 
             UpdateDisplay();
 
@@ -101,10 +111,10 @@ namespace MusicUI
 
                                 if (oldChild != null)
                                     oldChild.Image.Bitmap.Dispose();
-
-                                UpdateDisplay();
                             }
                         }
+
+                        UpdateDisplay();
 
                         currentPhotoIndex++;
 
@@ -142,6 +152,8 @@ namespace MusicUI
 
             songTitleText.Text = currentSong.Title;
             songArtistText.Text = currentSong.Artist;
+
+            timeText.Text = DateTime.Now.ToString("H:mm");
 
             UpdateContentLayout();
         }

@@ -1,4 +1,5 @@
-﻿using MusicLib;
+﻿using System.Diagnostics;
+using MusicLib;
 using TagLib;
 
 namespace TestApp
@@ -19,13 +20,17 @@ namespace TestApp
             //    string blah = await client.GetReleaseGroup(album[0]);
             //}
 
-            ImportAlbums(songIndex, @"C:\Users\oliph\Downloads\Tom Petty & The Heartbreakers - Hypnotic Eye");
+            ImportAlbums(songIndex, @"C:\Users\oliph\Downloads\The Lemon Twigs - A Dream Is All We Know");
            
             songIndex.WriteToJson();
         }
 
         static void ImportAlbums(SongIndex songIndex, string fromPath)
         {
+            Process rsGain = Process.Start(@"C:\Share\Audio-Video\rsgain-3.7-win64\rsgain.exe", "easy \"" + fromPath + "\"");
+
+            rsGain.WaitForExit();
+
             SongIndex fromIndex = SongIndex.CreateFromPath(fromPath);
 
             fromIndex.AddVariousArtists();

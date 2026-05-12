@@ -96,9 +96,9 @@ namespace MusicLib
 
                 foreach (var song in newSongs)
                 {
-                    insertIndex += 5 + Random.Shared.Next(5);
-
                     songs.Insert(insertIndex, song);
+
+                    insertIndex += 5 + Random.Shared.Next(5);
                 }
             }
 
