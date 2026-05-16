@@ -66,6 +66,13 @@ namespace MusicUI
 
         async Task CycleImages()
         {
+            if (PlayContext.CurrentSong == null)
+            {
+                await PlayContext.SetPlaylist("rockish_new");
+
+                UpdateDisplay();
+            }
+
             while (true)
             {
                 for (int i = 0; i < 30; i++)
@@ -76,11 +83,6 @@ namespace MusicUI
 
                         currentPhotos = await GetSplashPhotos();
 
-                        if (currentPhotos != null)
-                        {
-                            Random.Shared.Shuffle(currentPhotos.Results);
-                        }
-
                         currentPhotoIndex = 0;
 
                         break;
@@ -89,7 +91,7 @@ namespace MusicUI
                     await Task.Delay(1000);
                 }
 
-                if ((currentPhotos != null) && (currentPhotos.Results.Length > 0))
+                if ((currentPhotos != null) && (currentPhotos.Results.Count > 0))
                 {
                     try
                     {
@@ -118,7 +120,7 @@ namespace MusicUI
 
                         currentPhotoIndex++;
 
-                        if (currentPhotoIndex == currentPhotos.Results.Length)
+                        if (currentPhotoIndex == currentPhotos.Results.Count)
                             currentPhotoIndex = 0;
                     }
                     catch (Exception ex)
@@ -150,10 +152,18 @@ namespace MusicUI
         {
             SongData currentSong = PlayContext.CurrentSong;
 
-            songTitleText.Text = currentSong.Title;
-            songArtistText.Text = currentSong.Artist;
+            if (currentSong == null)
+            {
+                songTitleText.Text = "";
+                songArtistText.Text = "";
+            }
+            else
+            {
+                songTitleText.Text = currentSong.Title;
+                songArtistText.Text = currentSong.Artist;
+            }
 
-            timeText.Text = DateTime.Now.ToString("H:mm");
+            timeText.Text = DateTime.Now.ToString("h:mmtt").ToLower();
 
             UpdateContentLayout();
         }

@@ -20,7 +20,7 @@ namespace TestApp
             //    string blah = await client.GetReleaseGroup(album[0]);
             //}
 
-            ImportAlbums(songIndex, @"C:\Users\oliph\Downloads\The Lemon Twigs - A Dream Is All We Know");
+            ImportAlbums(songIndex, @"C:\Share\MusicIncoming");
            
             songIndex.WriteToJson();
         }

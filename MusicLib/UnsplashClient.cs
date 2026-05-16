@@ -9,15 +9,21 @@ namespace MusicLib
 {
     public class UnsplashSearchResponse
     {
-        public int Total { get; set; }
-        public Photo[] Results { get; set; }
+        public List<Photo> Results { get; set; }
     }
 
     public class Photo
     {
         public string Id { get; set; }
         public string Description { get; set; }
+        public User User { get; set;}
         public Urls Urls { get; set; }
+    }
+
+    public class User
+    {
+        public string Id { get; set; }
+        public string Username { get; set; }
     }
 
     public class Urls
@@ -31,6 +37,8 @@ namespace MusicLib
 
     public class UnsplashClient
     {
+        public static List<string> UserBlacklist { get; private set; } = [ "brett_jordan" ];
+
         string accessKey;
         HttpClient client = new HttpClient();
 
@@ -48,6 +56,8 @@ namespace MusicLib
                 var response = await client.GetStringAsync(url);
                 var results = JsonSerializer.Deserialize<UnsplashSearchResponse>(response,
                     new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+                results.Results.RemoveAll(p => UserBlacklist.Contains(p.User.Username));
 
                 return results;
             }
