@@ -160,7 +160,12 @@ namespace MusicUI
             else
             {
                 songTitleText.Text = currentSong.Title;
-                songArtistText.Text = currentSong.Artist;
+                songArtistText.Text = $"{currentSong.Artist} - {currentSong.Album}";
+
+                if (currentSong.Year > 0)
+                {
+                    songArtistText.Text += $" ({currentSong.Year})";
+                }
             }
 
             timeText.Text = DateTime.Now.ToString("h:mmtt").ToLower();

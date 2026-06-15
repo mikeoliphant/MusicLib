@@ -1,7 +1,71 @@
-﻿using MusicLib;
+﻿using Android.Media;
+using MusicLib;
+using SkiaSharp;
 
 namespace AndroidPlayer
 {
+    public class StreamMediaDataSource : MediaDataSource, TagLib.File.IFileAbstraction
+    {
+        private readonly System.IO.Stream sourceStream;
+        private readonly object _lock = new object();
+
+        public StreamMediaDataSource(System.IO.Stream sourceStream)
+        {
+            if (!sourceStream.CanSeek)
+                throw new ArgumentException("The provided stream must be seekable.", nameof(sourceStream));
+
+            this.sourceStream = sourceStream;
+        }
+
+        // Android queries this to know how large the resource is (in bytes)
+        public override long Size => sourceStream.Length;
+
+        public string Name { get; set;  }
+
+        public System.IO.Stream ReadStream => sourceStream;
+
+        public System.IO.Stream WriteStream => sourceStream;
+
+        // Android invokes this method repeatedly to pull audio binary chunks
+        public override int ReadAt(long position, byte[] buffer, int offset, int size)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    // Ensure the underlying stream matches Android's read head position
+                    if (sourceStream.Position != position)
+                    {
+                        sourceStream.Seek(position, SeekOrigin.Begin);
+                    }
+
+                    // Read directly from the .NET stream into Android's buffer wrapper
+                    int bytesRead = sourceStream.Read(buffer, offset, size);
+
+                    // Return -1 if End-of-Stream is encountered, otherwise return byte count
+                    return bytesRead == 0 ? -1 : bytesRead;
+                }
+                catch (Exception)
+                {
+                    return -1; // Notify MediaPlayer that an unrecoverable stream read failure occurred
+                }
+            }
+        }
+
+        public override void Close()
+        {
+            lock (_lock)
+            {
+                sourceStream?.Dispose();
+            }
+        }
+
+        public void CloseStream(System.IO.Stream stream)
+        {
+            //sourceStream.Flush();
+        }
+    }
+
     public class AndroidSongPlayContext : SongPlayContext
     {
         Android.Media.MediaPlayer player;
@@ -10,6 +74,13 @@ namespace AndroidPlayer
             : base(fileProvider)
         {
             player = new();
+
+            var audioAttributes = new AudioAttributes.Builder()
+                .SetContentType(AudioContentType.Music)
+                .SetUsage(AudioUsageKind.Media)
+                .Build();
+
+            player.SetAudioAttributes(audioAttributes);
 
             player.Completion += Player_Completion;
         }
@@ -28,17 +99,22 @@ namespace AndroidPlayer
                 player.Stop();
                 player.Reset();
 
-                string tempPath = Path.Combine(Android.App.Application.Context.CacheDir.Path, "temp.mp3");
-
-                using (Stream mp3Stream = SongFileProvider.GetFileStream(CurrentSong.FileName))
+                StreamMediaDataSource mp3Stream = new StreamMediaDataSource(SongFileProvider.GetFileStream(CurrentSong.FileName))
                 {
-                    using (var fileStream = File.Create(tempPath))
-                    {
-                        mp3Stream.CopyTo(fileStream);
-                    }
-                }
+                    Name = CurrentSong.FileName
+                };
 
-                var tagFile = TagLib.File.Create(tempPath);
+                //{
+
+                //    string tempPath = Path.Combine(Android.App.Application.Context.CacheDir.Path, "temp" + Path.GetExtension(CurrentSong.FileName));
+
+                //    using (var fileStream = File.Create(tempPath))
+                //    {
+                //        mp3Stream.CopyTo(fileStream);
+                //    }
+                //}
+
+                var tagFile = TagLib.File.Create(mp3Stream);
 
                 float dbGain = (float)tagFile.Tag.ReplayGainTrackGain;
 
@@ -51,7 +127,7 @@ namespace AndroidPlayer
                     player.SetVolume(linearGain, linearGain);
                 }
 
-                player.SetDataSource(tempPath);
+                player.SetDataSource(mp3Stream);
                 player.Prepare();
                 player.Start();
             }

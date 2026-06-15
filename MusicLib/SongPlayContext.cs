@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -129,38 +130,47 @@ namespace MusicLib
 
         async Task RunHttpServer()
         {
-            httpListener = new HttpListener();
-            httpListener.Prefixes.Add(HttpListenUrl);
-
-            httpListener.Start();
-
             while (true)
             {
+                httpListener = new HttpListener();
+                httpListener.Prefixes.Add(HttpListenUrl);
+
+                httpListener.Start();
+
                 try
                 {
-                    HttpListenerContext context = httpListener.GetContext();
-                    HttpListenerRequest request = context.Request;
-
-                    if (request.HttpMethod == "POST")
+                    while (true)
                     {
-                        switch (request.Url.AbsolutePath)
+                        HttpListenerContext context = httpListener.GetContext();
+                        HttpListenerRequest request = context.Request;
+
+                        if (request.HttpMethod == "POST")
                         {
-                            case "/next_song":
-                                NextSong();
-                                break;
-                            case "/playlist":
-                                string playlistType = request.QueryString.Get("type");
+                            switch (request.Url.AbsolutePath)
+                            {
+                                case "/next_song":
+                                    NextSong();
+                                    break;
+                                case "/playlist":
+                                    string playlistType = request.QueryString.Get("type");
 
-                                SetPlaylist(playlistType);
+                                    SetPlaylist(playlistType);
 
-                                break;
+                                    break;
+                            }
+
                         }
 
-                    }
+                        using HttpListenerResponse response = context.Response;
 
-                    using HttpListenerResponse response = context.Response;
+                        string last5 = "<h2>Last 5:</h2>";
 
-                    string responseString = $"""
+                        for (int i = currentSongIndex - 1; (i >= 0) && (i > (currentSongIndex - 6)); i--)
+                        {
+                            last5 += $"<h3>{SongIndex.Songs[i].Artist} - {SongIndex.Songs[i].Title}<h3>\n";
+                        }
+
+                        string responseString = $"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -177,21 +187,23 @@ namespace MusicLib
         <button formaction="/playlist?type=rockish_new" type="submit">Rockish New</button>
         <button formaction="/playlist?type=rock" type="submit">Rock Only</button>
     </form>
+    {last5}
   </body>
 </html>
 """;
-                    byte[] buffer = Encoding.UTF8.GetBytes(responseString);
+                        byte[] buffer = Encoding.UTF8.GetBytes(responseString);
 
-                    response.ContentLength64 = buffer.Length;
-                    response.ContentType = "text/html";
+                        response.ContentLength64 = buffer.Length;
+                        response.ContentType = "text/html";
 
-                    using Stream output = response.OutputStream;
-                    output.Write(buffer, 0, buffer.Length);
+                        using Stream output = response.OutputStream;
+                        output.Write(buffer, 0, buffer.Length);
+                    }
                 }
                 catch (Exception ex)
                 {
 
-                }                
+                }
             }
         }
     }

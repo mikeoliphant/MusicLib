@@ -13,6 +13,8 @@ namespace MusicLib
         public string RootPath { get; set; } = "";
         public List<SongData> Songs { get; set; } = new();
 
+        string[] allowedExtensions = { ".mp3", ".flac" };
+
         public void WriteToJson()
         {
             if (string.IsNullOrWhiteSpace(RootPath))
@@ -91,11 +93,7 @@ namespace MusicLib
                 AddFolder(folder);
             }
 
-            foreach (string songFile in Directory.GetFiles(folderPath, "*.mp3",
-                new EnumerationOptions
-                {
-                    MatchCasing = MatchCasing.CaseInsensitive,
-                }))
+            foreach (string songFile in Directory.EnumerateFiles(folderPath, "*.*").Where(file => allowedExtensions.Contains(Path.GetExtension(file).ToLower())))
             {
                 try
                 {
@@ -134,7 +132,7 @@ namespace MusicLib
 
         public static string GetSongPath(SongData song)
         {
-            return Path.Combine(GetAlbumPath(song), GetSafeFilename(song.Title)) + ".mp3";
+            return Path.Combine(GetAlbumPath(song), GetSafeFilename(song.Title)) + Path.GetExtension(song.FileName);
         }
 
         public static string GetSafeFilename(string path)
@@ -259,7 +257,7 @@ namespace MusicLib
 
                 foreach (string file in Directory.GetFiles(Path.Combine(RootPath, srcFolder)))
                 {
-                    if (Path.GetExtension(file).ToLower() != ".mp3")
+                    if (!allowedExtensions.Contains(Path.GetExtension(file).ToLower()))
                     {
                         File.Copy(file, Path.Combine(destFolder, Path.GetFileName(file)), overwrite: true);
                     }
@@ -294,5 +292,7 @@ namespace MusicLib
         public uint PlayTime { get; set; }
         public DateOnly DateAdded { get; set; } = DateOnly.MinValue;
         public string FileName { get; set; } = "";
+
+        public override string ToString() => $"{Artist} - {Title}";
     }
 }
