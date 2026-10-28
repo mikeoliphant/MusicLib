@@ -80,7 +80,7 @@ namespace MusicLib
         {
             SongIndex songIndex = null;
 
-            using (Stream indexStream = SongFileProvider.GetFileStream("index.json"))
+            using (Stream indexStream = SongFileProvider.GetInputStream("index.json"))
             {
                 songIndex = SongIndex.ReadFromJson(indexStream);
             }
@@ -98,26 +98,42 @@ namespace MusicLib
                 case "rockish_new":
                     songIndex.Songs = songIndex.Songs.Where(s => !StartsWith(s.Genre, "Chorus", "Classical", "Blues", "Jazz", "Celtic", "World")).ToList();
 
-                    var newSongs = songIndex.Songs.Where(s => (s.DateAdded > DateOnly.FromDateTime(DateTime.Now - TimeSpan.FromDays(30)))).ToList();
+                    var last60 = songIndex.Songs.Where(s => (s.DateAdded > DateOnly.FromDateTime(DateTime.Now - TimeSpan.FromDays(60)))).ToList();
 
-                    songIndex.Songs.RemoveAll(s => newSongs.Contains(s));
+                    songIndex.Songs.RemoveAll(s => last60.Contains(s));
+
+                    var last15 = last60.Where(s => (s.DateAdded > DateOnly.FromDateTime(DateTime.Now - TimeSpan.FromDays(15)))).ToList();
+
+                    last60.RemoveAll(s => last15.Contains(s));
 
                     int insertIndex = 0;
 
-                    foreach (var song in newSongs)
+                    foreach (var song in last15)
                     {
                         songIndex.Songs.Insert(insertIndex, song);
 
                         insertIndex += 2 + Random.Shared.Next(3);
                     }
 
+                    insertIndex = 0;
+
+                    foreach (var song in last60)
+                    {
+                        insertIndex += 5 + Random.Shared.Next(5);
+
+                        songIndex.Songs.Insert(insertIndex, song);
+                    }
+
                     break;
                 case "rock":
                     songIndex.Songs = songIndex.Songs.Where(s =>
-                        ((s.Genre == "Rock") || (s.Genre == "Rock") || (s.Genre == "Alternative") || (s.Genre == "Alternative Rock") || (s.Genre == "Hard Rock") || (s.Genre == "Grunge") || (s.Genre == "Garage"))
+                        ((s.Genre == "Rock") || (s.Genre == "Alternative") || (s.Genre == "Alternative Rock") || (s.Genre == "Hard Rock") || (s.Genre == "Grunge") || (s.Genre == "Garage"))
                         && (s.Year > 1965)
                         ).ToList();
 
+                    break;
+                case "mellow":
+                    songIndex.Songs = songIndex.Songs.Where(s => !StartsWith(s.Genre, "Chorus", "Classical", "Blues", "Jazz", "Celtic", "World", "Hard Rock", "Hip Hop") && !s.Genre.Contains("Punk") && !s.Genre.Contains("Metal")).ToList();
                     break;
             }
 
@@ -186,6 +202,7 @@ namespace MusicLib
         <button formaction="/playlist?type=rockish" type="submit">Rockish</button>
         <button formaction="/playlist?type=rockish_new" type="submit">Rockish New</button>
         <button formaction="/playlist?type=rock" type="submit">Rock Only</button>
+        <button formaction="/playlist?type=mellow" type="submit">Mellow</button>
     </form>
     {last5}
   </body>

@@ -19,12 +19,19 @@ namespace AndroidPlayer
     {
         LayoutView layoutView;
         SongPlayContext playContext;
+        MainInterface mainInterface;
 
         public override bool OnKeyDown([GeneratedEnum] Keycode keyCode, KeyEvent? e)
         {
             if (e.KeyCode == Keycode.DpadRight)
             {
                 playContext.NextSong();
+
+                return true;
+            }
+            else if (e.KeyCode == Keycode.DpadDown)
+            {
+                mainInterface.BlacklistCurrentPhoto();
 
                 return true;
             }
@@ -52,7 +59,7 @@ namespace AndroidPlayer
             var canvasView = new SKCanvasView(this);
             SetContentView(layoutView.CanvasView);
 
-            layoutView.RootUIElement = new MainInterface(playContext);
+            layoutView.RootUIElement = mainInterface = new MainInterface(playContext);
         }
     }
 }

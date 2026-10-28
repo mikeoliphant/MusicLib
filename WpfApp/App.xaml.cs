@@ -29,7 +29,7 @@ namespace WpfApp
 
             ui.RootUIElement = new MainInterface(playContext);
 
-            layoutWindow.SkiaCanvas.SetLayout(ui);
+            layoutWindow.SkiaCanvas.SetLayout(ui);            
 
             layoutWindow.Show();
         }

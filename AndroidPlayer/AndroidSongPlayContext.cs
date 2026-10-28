@@ -6,8 +6,10 @@ namespace AndroidPlayer
 {
     public class StreamMediaDataSource : MediaDataSource, TagLib.File.IFileAbstraction
     {
-        private readonly System.IO.Stream sourceStream;
-        private readonly object _lock = new object();
+        System.IO.Stream sourceStream;
+        object _lock = new object();
+        BufferedStream bufferedStream;
+
 
         public StreamMediaDataSource(System.IO.Stream sourceStream)
         {
@@ -15,6 +17,8 @@ namespace AndroidPlayer
                 throw new ArgumentException("The provided stream must be seekable.", nameof(sourceStream));
 
             this.sourceStream = sourceStream;
+
+            bufferedStream = new BufferedStream(sourceStream, 128 * 1024);
         }
 
         // Android queries this to know how large the resource is (in bytes)
@@ -22,7 +26,7 @@ namespace AndroidPlayer
 
         public string Name { get; set;  }
 
-        public System.IO.Stream ReadStream => sourceStream;
+        public System.IO.Stream ReadStream => bufferedStream;
 
         public System.IO.Stream WriteStream => sourceStream;
 
@@ -90,6 +94,15 @@ namespace AndroidPlayer
             NextSong();
         }
 
+        private async void Player_Prepared(object? sender, EventArgs e)
+        {
+            player.Prepared -= Player_Prepared;
+
+            await Task.Delay(1000);
+
+            player.Start();
+        }
+
         public override void PlayCurrentSong()
         {
             base.PlayCurrentSong();
@@ -99,7 +112,7 @@ namespace AndroidPlayer
                 player.Stop();
                 player.Reset();
 
-                StreamMediaDataSource mp3Stream = new StreamMediaDataSource(SongFileProvider.GetFileStream(CurrentSong.FileName))
+                StreamMediaDataSource mp3Stream = new StreamMediaDataSource(SongFileProvider.GetInputStream(CurrentSong.FileName))
                 {
                     Name = CurrentSong.FileName
                 };
@@ -128,8 +141,9 @@ namespace AndroidPlayer
                 }
 
                 player.SetDataSource(mp3Stream);
-                player.Prepare();
-                player.Start();
+
+                player.Prepared += Player_Prepared;
+                player.PrepareAsync();
             }
             catch (Exception ex)
             {

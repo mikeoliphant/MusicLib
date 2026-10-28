@@ -43,7 +43,7 @@ namespace WpfApp
         {
             base.PlayCurrentSong();
 
-            using (Stream songStream = SongFileProvider.GetFileStream(CurrentSong.FileName))
+            using (Stream songStream = SongFileProvider.GetInputStream(CurrentSong.FileName))
             {
                 var tagFile = TagLib.File.Create(new StreamFileAbstraction(CurrentSong.FileName, songStream));
 

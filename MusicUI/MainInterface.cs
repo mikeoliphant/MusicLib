@@ -10,15 +10,16 @@ namespace MusicUI
     {
         public SongPlayContext PlayContext { get; private set; }
 
-        TextBlock songTitleText;
-        TextBlock songArtistText;
-        TextBlock timeText;
+        OutlinedText songTitleText;
+        OutlinedText songArtistText;
+        OutlinedText timeText;
         UIElementWrapper splashWrapper;
         SongData lastSongData = null;
         UnsplashSearchResponse currentPhotos;
         int currentPhotoIndex = 0;
         HttpClient httpClient = new HttpClient();
         Random random = new();
+        bool needPhotoSkip = false;
 
         public MainInterface(SongPlayContext playContext)
         {
@@ -40,24 +41,40 @@ namespace MusicUI
             {
                 HorizontalAlignment = EHorizontalAlignment.Left,
                 VerticalAlignment = EVerticalAlignment.Bottom,
-                ChildSpacing = 10
+                ChildSpacing = 20
             };
 
             uiDock.Children.Add(songInfoStack);
 
-            songTitleText = new TextBlock();
-            songArtistText = new TextBlock();
+            songTitleText = new OutlinedText();
+            songArtistText = new OutlinedText();
 
             songInfoStack.Children.Add(songTitleText);
             songInfoStack.Children.Add(songArtistText);
 
-            timeText = new TextBlock
+            timeText = new OutlinedText
             {
                 HorizontalAlignment = EHorizontalAlignment.Right,
                 VerticalAlignment = EVerticalAlignment.Top
             };
 
             uiDock.Children.Add(timeText);
+
+            try
+            {
+                using (StreamReader reader = new StreamReader(PlayContext.SongFileProvider.GetInputStream("Blacklist.txt")))
+                {
+                    string blacklist = reader.ReadToEnd();
+
+                    UnsplashClient.UserBlacklist.Clear();
+
+                    foreach (string user in blacklist.Split(','))
+                    {
+                        UnsplashClient.UserBlacklist.Add(user);
+                    }
+                }
+            }
+            catch { }
 
             UpdateDisplay();
 
@@ -77,6 +94,13 @@ namespace MusicUI
             {
                 for (int i = 0; i < 30; i++)
                 {
+                    if (needPhotoSkip)
+                    {
+                        needPhotoSkip = false;
+
+                        break;
+                    }
+
                     if (PlayContext.CurrentSong != lastSongData)
                     {
                         lastSongData = PlayContext.CurrentSong;
@@ -148,6 +172,27 @@ namespace MusicUI
             UpdateDisplay();
         }
 
+        public void BlacklistCurrentPhoto()
+        {
+            if (currentPhotoIndex > 0)
+            {
+                try
+                {
+                    string userName = currentPhotos.Results[currentPhotoIndex - 1].User.Username;
+
+                    if (!UnsplashClient.UserBlacklist.Contains(userName))
+                    {
+                        UnsplashClient.UserBlacklist.Add(userName);
+
+                        PlayContext.SongFileProvider.WriteTextToFile(string.Join(',', UnsplashClient.UserBlacklist), "Blacklist.txt");
+                    }
+
+                    needPhotoSkip = true;
+                }
+                catch { }
+            }
+        }
+
         public void UpdateDisplay()
         {
             SongData currentSong = PlayContext.CurrentSong;
@@ -182,5 +227,26 @@ namespace MusicUI
 
             return true;
         }
+    }
+
+    public class OutlinedText : TextBlock
+    {
+        public UIColor OutlineColor { get; set; } = UIColor.Black;
+        public float OutlineSize { get; set; } = 2.0f;
+
+        protected override void DrawContents()
+        {
+            for (float yOffset = -OutlineSize; yOffset <= OutlineSize; yOffset += OutlineSize)
+            {
+                for (float xOffset = -OutlineSize; xOffset <= OutlineSize; xOffset += OutlineSize)
+                {
+                    Layout.Current.GraphicsContext.DrawText(Text, TextFont, ContentBounds.X + xOffset, ContentBounds.Y + yOffset, OutlineColor);
+
+                }
+            }
+
+            Layout.Current.GraphicsContext.DrawText(Text, TextFont, ContentBounds.X, ContentBounds.Y, TextColor);
+        }
+
     }
 }

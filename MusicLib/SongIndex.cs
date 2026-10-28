@@ -135,6 +135,11 @@ namespace MusicLib
             return Path.Combine(GetAlbumPath(song), GetSafeFilename(song.Title)) + Path.GetExtension(song.FileName);
         }
 
+        public string GetSongFullPath(SongData song)
+        {
+            return Path.Combine(RootPath, GetSongPath(song));
+        }
+
         public static string GetSafeFilename(string path)
         {
             var normalizedString = path.Normalize(NormalizationForm.FormD);
@@ -241,6 +246,8 @@ namespace MusicLib
                 }
 
                 string songFile = Path.Combine(path, GetSongPath(song));
+
+                Console.WriteLine("Copying: " + song.FileName);
 
                 File.Copy(Path.Combine(RootPath, song.FileName), songFile, overwrite: true);
             }

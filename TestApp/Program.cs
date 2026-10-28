@@ -20,8 +20,9 @@ namespace TestApp
             //    string blah = await client.GetReleaseGroup(album[0]);
             //}
 
+
             ImportAlbums(songIndex, @"C:\Share\MusicIncoming");
-           
+
             songIndex.WriteToJson();
         }
 
@@ -48,6 +49,16 @@ namespace TestApp
 
                     songIndex.Songs.Add(song);
                 }
+            }
+        }
+
+        static void DeleteMissing(SongIndex index)
+        {
+            var missing = index.Songs.Where(s => !System.IO.File.Exists(index.GetSongFullPath(s))).ToArray();
+
+            foreach (var song in missing)
+            {
+                index.Songs.Remove(song);
             }
         }
 
